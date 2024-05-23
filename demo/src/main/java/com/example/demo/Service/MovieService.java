@@ -49,12 +49,13 @@ public class MovieService {
         var movieTf = ifIdf.stream().filter((m) -> m.getMovies().getSeriesTitle().equals(movie.getSeriesTitle())).toList().get(0);
         var list = new ArrayList<>(ifIdf.stream().peek((m) -> m.setSimilarity(calculateCosineSimilarity(movieTf, m))).toList());
         //Print matrix
-//        StringBuilder res= new StringBuilder();
-//        for (var mo : list){
-//            for (var el : mo.getScoreList()) res.append(el).append(" ");
-//            res.append("\n");
-//        }
-//        System.out.println(res);
+        StringBuilder res= new StringBuilder();
+        for (var mo : list){
+            res.append(mo.getMovies().getSeriesTitle()).append(" ");
+            for (var el : mo.getScoreList()) res.append(el).append(" ");
+            res.append("\n");
+        }
+        System.out.println(res);
         list.sort(Comparator.comparing(MoviesTf::getSimilarity).reversed());
         list.remove(0);
         return list.stream().limit(10).toList();
@@ -67,6 +68,12 @@ public class MovieService {
         movieRepo.save(movie);
     }
 
+    /**
+     * <h1> Tạo ma trận TfIdf</h1>
+     * @param movie
+     * @param listMovies
+     * @return ma trận
+     */
     private List<MoviesTf> createTfIdf(Movies movie, List<Movies> listMovies){
         movie.profileInit();
         var dictionary = movie.getProfile();
@@ -89,19 +96,33 @@ public class MovieService {
                 }
             }
         }
+        for (var m : dictionary) System.out.println(m);
         return result;
     }
 
+    /**
+     * <H1>Tính giá trị Tf của từng phim với từng từ</H1>
+     * @param word
+     * @param profile
+     * @param allWords
+     * @return
+     */
     private double calculateTf(String word, List<String> profile, List<String> allWords){
         var count = profile.stream().filter((w) -> w.equals(word)).count();
         var max = allWords.stream().filter((w) -> w.equals(word)).count();
         return (double) count /max;
     }
 
+    /**
+     * <H1>Tính giá trị Idf của từng phim với từng từ</H1>
+     */
     private double calculateIdf(int total, int count){
         return Math.log((double) total/count);
     }
 
+    /**
+     * <H1>Độ tương tự Cosine</H1>
+     */
     private double calculateCosineSimilarity(MoviesTf movie1, MoviesTf movie2) {
         var a = getAbove(movie1, movie2);
         var b = getUnder(movie1, movie2);
